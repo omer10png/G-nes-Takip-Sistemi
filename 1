@@ -1,0 +1,116 @@
+#include <Servo.h> // servo kütüphanesi
+
+
+Servo yatayServo; // yatayServo servo
+int servoY = 90;   // 90;     // yatayServo servo standı
+
+int servoYLimitHigh = 180; //yatayServo max 180
+int servoYLimitLow = 65; // 65 degrees MAX
+
+
+Servo dikeyServo;   // Dikey Servo
+int servoD = 90;  //dikey servo standı
+
+int servoDLimitHigh = 120;
+int servoDLimitLow = 15;
+
+
+// LDR bağlantı pinleri
+int ldrlt = A2; //LDR sol üst
+int ldrrt = A3; //LDR sağ üst
+int ldrld = A0; //LDR sol alt
+int ldrrd = A1; //LDR sağ alt
+
+void setup()
+{
+  Serial.begin(9600);
+  yatayServo.attach(9); 
+  dikeyServo.attach(10);
+  yatayServo.write(180);
+  dikeyServo.write(45);
+  delay(3000);
+}
+
+void loop() 
+{
+  int lt = analogRead(ldrlt); // top left
+  int rt = analogRead(ldrrt); // top right
+  int ld = analogRead(ldrld); // down left
+  int rd = analogRead(ldrrd); // down rigt
+  
+  // int dtime = analogRead(4)/20; // read potentiometers  
+  // int tol = analogRead(5)/4;
+  int dtime = 10;
+  int tol = 50;
+  
+  int avt = (lt + rt) / 2; // Ortalama üst değer
+  int avd = (ld + rd) / 2; // Ortalama alt değer
+  int avl = (lt + ld) / 2; // Ortalama sol değer
+  int avr = (rt + rd) / 2; // Ortalama sağ değer
+
+  int dvert = avt - avd; // yukarı ile aşağının farkını hesapla
+  int dhoriz = avl - avr;// sağ ile solun farkını hesapla
+  
+  
+  Serial.print(avt);// Ortalama üst değer
+  Serial.print(" ");
+  Serial.print(avd); // Ortalama alt değer
+  Serial.print(" ");
+  Serial.print(avl); // Ortalama sol değer
+  Serial.print(" ");
+  Serial.print(avr); // Ortalama sağ değer
+  Serial.print("   ");
+  Serial.print(dtime);
+  Serial.print("   ");
+  Serial.print(tol);
+  Serial.println(" ");
+  
+    
+  if (-1*tol > dvert || dvert > tol) //farkın toleransta olup olmadığını kontrol edin dikey Servo açısını değiştirin
+  {
+  if (avt > avd)
+  {
+    servoD = ++servoD;
+     if (servoD > servoDLimitHigh) 
+     { 
+      servoD = servoDLimitHigh;
+     }
+  }
+  else if (avt < avd)
+  {
+    servoD= --servoD;
+    if (servoD < servoDLimitLow)
+  {
+    servoD = servoDLimitLow;
+  }
+  }
+  dikeyServo.write(servoD);
+  }
+  
+  if (-1*tol > dhoriz || dhoriz > tol) // farkın toleransta olup olmadığını kontrol edin yatay Servo açısını değiştir
+  {
+  if (avl > avr)
+  {
+    servoY = --servoY;
+    if (servoY < servoYLimitLow)
+    {
+    servoY = servoYLimitLow;
+    }
+  }
+  else if (avl < avr)
+  {
+    servoY = ++servoY;
+     if (servoY > servoYLimitHigh)
+     {
+     servoY = servoYLimitHigh;
+     }
+  }
+  else if (avl = avr)
+  {
+    // boş
+  }
+  yatayServo.write(servoY);
+  }
+   delay(dtime);
+
+}
